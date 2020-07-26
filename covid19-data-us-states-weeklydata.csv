@@ -1,4 +1,4 @@
-date,state,fips,cases,deaths,new cases,new deaths
+date,state,fips,cases,deaths,new_cases,new_deaths
 2020-03-14,Alabama,1,12,0,12,0
 2020-03-21,Alabama,1,131,0,119,0
 2020-03-28,Alabama,1,720,4,589,4
