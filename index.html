@@ -1,0 +1,597 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+		<script type="text/javascript" src='https://d3js.org/d3.v5.min.js'></script>
+		<script type="text/javascript" src='https://d3js.org/topojson.v1.min.js'></script>
+		<title>Data Visualization</title>
+	</head>
+	<body onload='init()'>
+		<div id = "header" >
+			<h1>Narrative Data Visualization : COVID-19</h1>
+		</div>
+		<div id = "slider" >
+			<button id="prev-button" class="w3-button w3-black" onclick="ButtonPressed(-1)">Previous</button>
+			<button id="button1" class="w3-button w3-black" onclick="constructSlide1()">Slide1 - COVID19 Overall</button>
+			<button id="button2" class="w3-button w3-black" onclick="constructSlide2()">Slide2 - Top States Comparision</button>
+			<button id="button3" class="w3-button w3-black" onclick="constructSlide3()">Slide3 - Free Form Analysis</button>
+			<button id="next-button" class="w3-button w3-black" onclick="ButtonPressed(1)">Next</button>
+		</div>
+		<div id = "narrative-area" >
+			<table>
+				<tr>
+						<th style="text-align:left;vertical-align:top;padding:0">
+						<div id="button_desc">No Button</div>
+						<div id="tooltip">
+							<p>State: All States</p><p>Cases: N/A</p><p>Deaths: N/A</p>
+						</div>
+				</th>
+			</table>
+		</div>
+		<div id = "chararea" >
+			<p id = "state-selection-filter"> <b>State:</b>
+				<select id="myState" oninput ="stateSelected()">
+					<option value="Alabama">Alabama</option>
+					<option value="Alaska">Alaska</option>
+					<option value="Arizona">Arizona</option>
+					<option value="Arkansas">Arkansas</option>
+					<option value="California">California</option>
+					<option value="Colorado">Colorado</option>
+					<option value="Connecticut">Connecticut</option>
+					<option value="Delaware">Delaware</option>
+					<option value="Florida">Florida</option>
+					<option value="Georgia">Georgia</option>
+					<option value="Hawaii">Hawaii</option>
+					<option value="Idaho">Idaho</option>
+					<option value="Illinois">Illinois</option>
+					<option value="Indiana">Indiana</option>
+					<option value="Iowa">Iowa</option>
+					<option value="Kansas">Kansas</option>
+					<option value="Kentucky">Kentucky</option>
+					<option value="Louisiana">Louisiana</option>
+					<option value="Maine">Maine</option>
+					<option value="Maryland">Maryland</option>
+					<option value="Massachusetts">Massachusetts</option>
+					<option value="Michigan">Michigan</option>
+					<option value="Minnesota">Minnesota</option>
+					<option value="Mississippi">Mississippi</option>
+					<option value="Missouri">Missouri</option>
+					<option value="Montana">Montana</option>
+					<option value="Nebraska">Nebraska</option>
+					<option value="Nevada">Nevada</option>
+					<option value="New Hampshire">New Hampshire</option>
+					<option value="New Jersey">New Jersey</option>
+					<option value="New Mexico">New Mexico</option>
+					<option value="New York">New York</option>
+					<option value="North Carolina">North Carolina</option>
+					<option value="North Dakota">North Dakota</option>
+					<option value="Ohio">Ohio</option>
+					<option value="Oklahoma">Oklahoma</option>
+					<option value="Oregon">Oregon</option>
+					<option value="Pennsylvania">Pennsylvania</option>
+					<option value="Rhode Island">Rhode Island</option>
+					<option value="South Carolina">South Carolina</option>
+					<option value="South Dakota">South Dakota</option>
+					<option value="Tennessee">Tennessee</option>
+					<option value="Texas">Texas</option>
+					<option value="Utah">Utah</option>
+					<option value="Vermont">Vermont</option>
+					<option value="Virginia">Virginia</option>
+					<option value="Washington">Washington</option>
+					<option value="West Virginia">West Virginia</option>
+					<option value="Wisconsin">Wisconsin</option>
+					<option value="Wyoming">Wyoming</option>
+				</select>
+			</p>
+			<p id = "metric-selection-filter">
+				<form id = "metricSelected" oninput ="metricSelected()">
+					<input type="radio" name="choice" value="Total Cases"> Total Cases
+					<input type="radio" name="choice" value="Total Death"> Total Death
+					<input type="radio" name="choice" value="New Cases" checked="checked"> New Cases
+					<input type="radio" name="choice" value="New Death"> New Death
+				</form>
+			</p>
+			<p><svg></svg></p>
+			<p id = "date-range-filter">
+				<b id="rangemin">0</b><input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput ="dateSelected()"></input><b id='rangemax'>100</b>
+			</p>
+		</div>
+		<div id = "footer" >
+			<p>Published By: Mohan Khanal </p>
+		</div>
+	</body>
+</html>
+
+<script>
+selected_slide= "0"
+covid_us_overall = []
+covid_us_states = []
+covid_us_states_weekly = []
+covid_us_map = []
+date_range=[]
+state_list=[]
+
+date_selected = ""
+state_selected = "California"
+state_selected2 = "New York"
+state_selected3 = "Texas"
+state_selected4 = "Florida"
+slide3_state_selected = "California"
+
+use_metric = "New Cases"
+
+async function init() {
+	const covid_data_us = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-total.csv");
+	last_date=""
+	for (var i=0; i < d3.keys(covid_data_us).length - 1; i++){
+		last_date=covid_data_us[i].date;
+		//var x = document.getElementById("dateselector");
+		//var option = document.createElement("option");
+		//option.text = last_date;
+		//x.add(option)
+		//x.selectedIndex = i
+		date_selected=last_date
+		date_range.push(last_date)
+	}
+	var slider = document.getElementById("myRange");
+	if ('max' in slider) {
+		slider.max = date_range.length;
+		slider.value = date_range.length;
+        } 
+	else {
+        slider.setAttribute ("max", date_range.length);
+		slider.setAttribute ("value", date_range.length);
+		}
+	document.getElementById("rangemin").innerHTML = date_range[0]
+	document.getElementById("rangemax").innerHTML = date_range[date_range.length - 1]
+
+	covid_us_overall = covid_data_us
+	
+	const map_data = await d3.json("https://mkhanal2.github.io/datavisualization.github.io/us-mapdata.json");
+	covid_us_map = map_data	
+	const covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv");
+	covid_us_states = covid_data
+	const covid_data_weekly = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states-weeklydata.csv");
+	covid_us_states_weekly = covid_data_weekly
+	
+	var e = document.getElementById("myState");
+	e.value = "California";
+	slide3_state_selected = e.value;
+	
+	
+	constructSlide1()
+}
+
+async function constructSlide1(){
+	d3.selectAll("svg > *").remove();
+	selected_slide= "1"
+	var property = document.getElementById("button1");
+	property.style.backgroundColor = "#7FFF00"
+	var property = document.getElementById("button2");
+	property.style.backgroundColor = "#999999"
+	var property = document.getElementById("button3");
+	property.style.backgroundColor = "#999999"
+	var x = document.getElementById("state-selection-filter");
+	x.style.display = "none";
+	var x = document.getElementById("metricSelected");
+	x.style.display = "none";
+	var x = document.getElementById("date-range-filter");
+	x.style.display = "block";
+	
+	map_data=[]
+	if (covid_us_map.length < 1) {map_data = await d3.json("https://mkhanal2.github.io/datavisualization.github.io/us-mapdata.json"); console.log("Fresh Load");}
+	else {map_data = covid_us_map; console.log("Got from pre-loaded")};
+	
+	covid_data=[]
+	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv"); console.log("Fresh Load");}
+	else {covid_data = covid_us_states; console.log("Got from pre-loaded")};
+	
+	document.getElementById("button_desc").innerHTML = "US Overall Trend COVID-19";
+	document.getElementById("button1").className = "w3-button w3-black";
+	document.getElementById("button2").className = "w3-button w3-red";
+	document.getElementById("button3").className = "w3-button w3-black";
+
+	var margin = {top: 0, left: 0, right: 0, bottom: 0},
+		height = 400 - margin.top - margin.bottom,
+		width = 1000 - margin.left - margin.right;
+		
+	var svg = d3.select("svg")
+		.attr("height", height + margin.top + margin.bottom)
+		.attr("width", width + margin.left + margin.right)
+		.append("g")
+		.attr("transfrom", "translate(" + margin.left + "," + margin.top + ")");	
+
+	var used_data = covid_data.filter(function filterCriteria(d) {return d.date === date_selected});
+	
+	var max_cases = 0;
+	var max_deaths = 0;
+	
+	for (var i=0; i < d3.keys(used_data).length; i++){
+		used_data[i].fips = +used_data[i].fips;
+		used_data[i].cases = +used_data[i].cases;
+		used_data[i].deaths = +used_data[i].deaths;
+		if(max_cases < used_data[i].cases) { max_cases = used_data[i].cases };
+		if(max_deaths < used_data[i].deaths) { max_deaths = used_data[i].cases }
+	}
+	
+	datarange = [0, max_cases]
+	crange = ["white","red"];
+	cscale = d3.scaleLinear().domain(datarange).range(crange);
+	//geoMercator or geoAlbersUsa
+	var projection = d3.geoAlbersUsa()
+		.translate([width / 2 , height / 2])
+		.scale(900)
+
+	var path = d3.geoPath()
+		.projection(projection)
+		
+
+	var states = topojson.feature(map_data, map_data.objects.states).features;
+	
+	for (var i=0; i < d3.keys(used_data).length; i++){
+		for (var j=0; j < d3.keys(states).length; j++){
+			if (states[j].id == used_data[i].fips) {
+				states[j].state = used_data[i].state;
+				states[j].date = used_data[i].date;
+				states[j].cases = used_data[i].cases;
+				states[j].deaths = used_data[i].deaths;
+				states[j].clr = cscale(used_data[i].cases);
+				
+			}
+		}	
+	}
+	
+	svg.selectAll(".state")
+		.data(states)
+		.enter().append("path")
+		.attr("class","state")
+		.attr("id", function(d) {return "state" + d.id})
+		.attr("d", path)
+		.attr("fill", function(d) {return d.clr})
+		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6'); document.getElementById("tooltip").innerHTML = "<p>State:" + d.state + "</p><p>Date:" +  d.date + "</p><p>Cases:" +  (d.cases) + "</p><p>Deaths:" + d.deaths +"</p>";})
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr}); document.getElementById("tooltip").innerHTML = "<p>State: All States</p><p>Date: N/A</p><p>Cases: N/A</p><p>Deaths: N/A</p>";});
+
+	
+}
+
+async function constructSlide2(){
+	d3.selectAll("svg > *").remove();
+	selected_slide= "2"	
+	var property = document.getElementById("button1");
+	property.style.backgroundColor = "#999999"
+	var property = document.getElementById("button2");
+	property.style.backgroundColor = "#7FFF00"
+	var property = document.getElementById("button3");
+	property.style.backgroundColor = "#999999"
+	var x = document.getElementById("state-selection-filter");
+	x.style.display = "none";
+	var x = document.getElementById("metricSelected");
+	x.style.display = "none";
+	var x = document.getElementById("date-range-filter");
+	x.style.display = "none";
+	
+	covid_data=[]
+	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv"); console.log("Fresh Load");}
+	else {covid_data = covid_us_states; console.log("Got from pre-loaded")};
+	
+	document.getElementById("button_desc").innerHTML = "US State Wise Trend COVID-19";
+	document.getElementById("button1").className = "w3-button w3-black";
+	document.getElementById("button2").className = "w3-button w3-red";
+	document.getElementById("button3").className = "w3-button w3-black";
+	
+
+	var margin = 50,
+		legend_margin = 20,
+		height = 300,
+		width = 600;
+		
+
+	var used_data = covid_data.filter(function filterCriteria(d) {return d.state === state_selected});
+	var used_data2 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected2});
+	var used_data3 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected3});
+	var used_data4 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected4});
+	
+	var max_cases = 0;
+	var max_deaths = 0;
+	
+	for (var i=0; i < d3.keys(used_data).length; i++){
+		used_data[i].fips = +used_data[i].fips;
+		used_data[i].cases = +used_data[i].cases;
+		used_data[i].deaths = +used_data[i].deaths;
+		if(max_cases < used_data[i].cases) { max_cases = used_data[i].cases };
+		if(max_deaths < used_data[i].deaths) { max_deaths = used_data[i].cases }
+	}
+	
+	
+	var x = d3.scaleBand().domain(date_range).range([0,width]);
+	var y = d3.scaleLinear().domain([0, max_cases]).range([height, 0]);
+	
+	x_ticks = [];
+	for (var i=0; i < date_range.length; i = i + parseInt(date_range.length / 5)) {x_ticks.push(date_range[i])}
+	var xaxis = d3.scaleBand().domain(x_ticks).range([0,width]);
+	
+	d3.select("svg").append("g").attr("transform","translate("+margin+","+margin+")").call(d3.axisLeft(y));
+	d3.select("svg").append("g").attr("transform","translate("+margin+","+(height+margin)+")").call(d3.axisBottom(x).tickValues(x_ticks).tickFormat(d3.format("~s")));
+	
+	var line = d3.line()
+				.x(function(d){return x(d.date);})
+				.y(function(d){return y(d.cases);});
+	
+	
+	svg = d3.select("svg")
+		.attr("width", width + (2*margin))
+		.attr("height",height+(2*margin))
+		.append("g")
+		.attr("transform","translate("+margin+","+margin+")")
+	
+	
+	svg.selectAll()
+		.data(used_data)
+		.enter()
+		.append("path")
+		.attr("d", line(used_data))
+		.attr("class","linestyle1")
+		;
+		
+	svg.selectAll()
+		.data(used_data2)
+		.enter()
+		.append("path")
+		.attr("d", line(used_data2))
+		.attr("class","linestyle2")
+		;
+		
+	svg.selectAll()
+		.data(used_data3)
+		.enter()
+		.append("path")
+		.attr("d", line(used_data3))
+		.attr("class","linestyle3")
+		;
+				
+	svg.selectAll()
+		.data(used_data4)
+		.enter()
+		.append("path")
+		.attr("d", line(used_data4))
+		.attr("class","linestyle4")
+		;
+	
+	legend_y = [0, 20, 40, 60]
+	legend_color = ["blue", "red", "green", "black"];
+	legend_state = [state_selected, state_selected2, state_selected3, state_selected4];
+	
+	svg.selectAll("circle")
+		.data(legend_y)
+		.enter()
+		.append("rect")
+		.attr("x", 20)
+		.attr("y", function(d, i) {return d})
+		.attr("width", 10)
+		.attr("height", 10)
+		.attr("fill",function(d, i) {return legend_color[i]})
+		;
+			
+	svg.selectAll("text")
+		.data(legend_y)
+		.enter()	
+		.append("text")
+		.attr("x", 30)
+		.attr("y", function(d, i) {return d + 10})
+		.text(function(d, i) {return legend_state[i]})
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "15px")
+		.attr("fill", function(d, i) {return legend_color[i]})
+		;
+	
+}
+
+async function constructSlide3(){
+	d3.selectAll("svg > *").remove();
+	selected_slide= "3"	
+	var property = document.getElementById("button1");
+	property.style.backgroundColor = "#999999"
+	var property = document.getElementById("button2");
+	property.style.backgroundColor = "#999999"
+	var property = document.getElementById("button3");
+	property.style.backgroundColor = "#7FFF00"
+	var x = document.getElementById("state-selection-filter");
+	x.style.display = "block";
+	var x = document.getElementById("metricSelected");
+	x.style.display = "block";
+	var x = document.getElementById("date-range-filter");
+	x.style.display = "none";
+	
+	covid_data=[]
+	if (covid_us_states_weekly.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states-weeklydata.csv"); console.log("Fresh Load");}
+	else {covid_data = covid_us_states_weekly; console.log("Got from pre-loaded")};
+	
+	document.getElementById("button_desc").innerHTML = "US States Wise Weekly Trend COVID-19";
+	document.getElementById("button1").className = "w3-button w3-black";
+	document.getElementById("button2").className = "w3-button w3-red";
+	document.getElementById("button3").className = "w3-button w3-black";
+	
+
+	var margin = 50,
+		legend_margin = 20,
+		height = 300,
+		width = 600;
+		
+
+	var used_data = covid_data.filter(function filterCriteria(d) {return d.state === slide3_state_selected});
+	
+	var max_value = 0;
+	var local_date_range = [];
+	
+	for (var i=0; i < d3.keys(used_data).length; i++){
+		used_data[i].fips = +used_data[i].fips;
+		used_data[i].cases = +used_data[i].cases;
+		used_data[i].deaths = +used_data[i].deaths;
+		if (use_metric == "New Cases") {used_data[i].data_to_plot = +used_data[i].new_cases; }
+		else if (use_metric == "New Death") {used_data[i].data_to_plot = +used_data[i].new_deaths; }
+		else if (use_metric == "Total Cases") { used_data[i].data_to_plot = +used_data[i].cases;}
+		else if (use_metric == "Total Death") { used_data[i].data_to_plot = +used_data[i].deaths;}
+		if(max_value < used_data[i].data_to_plot) { max_value = used_data[i].data_to_plot };
+		local_date_range.push(used_data[i].date)
+	}
+	
+	
+	var x = d3.scaleBand().domain(local_date_range).range([0,width]);
+	var y = d3.scaleLinear().domain([0, max_value]).range([height, 0]);
+
+	
+	d3.select("svg").append("g").attr("transform","translate("+margin+","+margin+")").call(d3.axisLeft(y));
+	d3.select("svg").append("g").attr("transform","translate("+margin+","+(height+margin)+")").call(d3.axisBottom(x));
+		
+	svg = d3.select("svg")
+		.attr("width", width + (2*margin))
+		.attr("height",height+(2*margin))
+		.append("g")
+		.attr("transform","translate("+margin+","+margin+")")
+	
+	
+	svg.selectAll()
+		.data(used_data)
+		.enter()
+		.append("rect")
+		.attr("x", function(d, i) {return x(d.date)})
+		.attr("y", function(d) {return y(d.data_to_plot)})
+		.attr("width", (width / local_date_range.length) - 5)
+		.attr("height", function(d) {return height - y(d.data_to_plot)})
+		.attr("fill","#FF0000")
+		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#0000FF');})
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', '#FF0000')});
+		;
+}
+
+
+function dateSelected() {
+	var e = document.getElementById("myRange");
+	var strUser = parseInt(e.value);
+	date_selected=date_range[strUser - 1]
+	if (selected_slide == "1") {constructSlide1()};
+	if (selected_slide == "2") {constructSlide2()};
+	if (selected_slide == "3") {constructSlide3()};
+	
+
+}
+
+function stateSelected() {
+	var e = document.getElementById("myState");
+	var strUser = e.value;
+	slide3_state_selected = strUser
+	if (selected_slide == "3") {constructSlide3()};
+	
+
+}
+
+function metricSelected() {
+	var e = document.getElementById("metricSelected");
+	for (var i = 0; i < e.length; i++) {
+		if (e[i].checked) {
+			var strUser = e[i].value;
+			use_metric = strUser
+		}
+	}
+	if (selected_slide == "3") {constructSlide3()};
+	
+
+}
+
+function ButtonPressed(parm1) {
+	console.log(selected_slide)
+	if(parm1 == "-1") {
+		if (selected_slide == "2") {constructSlide1()}
+		else if (selected_slide == "3") {constructSlide2()};
+	}
+	else if (parm1 == "1") {
+		if (selected_slide == "1") {constructSlide2()}
+		else if (selected_slide == "2") {constructSlide3()};
+	}
+}
+
+</script>
+
+<style type="text/css">
+
+div#header {
+	background-color: #DDF;
+	height: 50px;
+}
+div#slider {
+	background-color: #FFF;
+	margin-left: 410px;
+	width: 900px;
+	height: 20px;
+}
+
+div#narrative-area {
+	background-color: #8F8;
+	width: 400px;
+	position: absolute;
+	min-height: 500px;
+}
+
+div#chararea {
+	border: solid 2px black;
+	margin-left: 410px;
+	min-height: 500px;
+}
+
+div#footer {
+	border: 1px solid black;
+}
+
+
+.state {
+	stroke: #333;
+	stroke-width: 1;
+}
+
+
+.county {
+	fill: #e3e3e3;
+	stroke: #fff;
+	stroke-width: 1;
+}
+
+.linestyle1 {
+	stroke: blue;
+	stroke-width: 2px;
+	fill:none
+}
+
+.linestyle2 {
+	stroke: red;
+	stroke-width: 2px;
+	fill:none
+}
+
+.linestyle3 {
+	stroke: green;
+	stroke-width: 2px;
+	fill:none
+}
+
+.linestyle4 {
+	stroke: black;
+	stroke-width: 2px;
+	fill:none
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 60px;					
+    height: 28px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightsteelblue;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+
+</style>
+</html>
