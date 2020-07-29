@@ -163,6 +163,8 @@ async function init() {
 	constructSlide1()
 }
 
+//--------------------------------------- constructSlide1 -------------------------------------------------------------------------------------
+
 async function constructSlide1(){
 	d3.selectAll("svg > *").remove();
 	selected_slide= "1"
@@ -207,29 +209,72 @@ async function constructSlide1(){
 	var max_cases = 0;
 	var max_deaths = 0;
 	
+	var highest_count = [{'cases':0},{'cases':0},{'cases':0},{'cases':0}]
+	
 	for (var i=0; i < d3.keys(used_data).length; i++){
 		used_data[i].fips = +used_data[i].fips;
 		used_data[i].cases = +used_data[i].cases;
 		used_data[i].deaths = +used_data[i].deaths;
-		if(max_cases < used_data[i].cases) { max_cases = used_data[i].cases };
+		if(highest_count[3].cases < used_data[i].cases) { 
+			depth = 1
+			if (highest_count[2].cases < used_data[i].cases){depth = 2}
+			if (highest_count[1].cases < used_data[i].cases){depth = 3}
+			if (highest_count[0].cases < used_data[i].cases){depth = 4}
+			
+			if (depth == 4){
+				Object.assign(highest_count[3], highest_count[2]);
+				Object.assign(highest_count[2], highest_count[1]);
+				Object.assign(highest_count[1], highest_count[0]);
+				highest_count[0].cases = used_data[i].cases
+				highest_count[0].state = used_data[i].state
+				highest_count[0].deaths = used_data[i].deaths
+				highest_count[0].divid = "state" + used_data[i].fips				
+				}
+			else if (depth == 3){
+				Object.assign(highest_count[3], highest_count[2]);
+				Object.assign(highest_count[2], highest_count[1]);
+				highest_count[1].cases = used_data[i].cases
+				highest_count[1].state = used_data[i].state
+				highest_count[1].deaths = used_data[i].deaths
+				highest_count[1].divid = "state" + used_data[i].fips
+				}
+			else if (depth == 2){
+				Object.assign(highest_count[3], highest_count[2]);
+				highest_count[2].cases = used_data[i].cases
+				highest_count[2].state = used_data[i].state
+				highest_count[2].deaths = used_data[i].deaths
+				highest_count[2].divid = "state" + used_data[i].fips
+				}
+			else if (depth == 1){
+				highest_count[3].cases = used_data[i].cases
+				highest_count[3].state = used_data[i].state
+				highest_count[3].deaths = used_data[i].deaths
+				highest_count[3].divid = "state" + used_data[i].fips
+				}
+			
+			};
 		if(max_deaths < used_data[i].deaths) { max_deaths = used_data[i].cases }
 	}
-	
+	max_cases = highest_count[0].cases
+	console.log(highest_count)
 	datarange = [0, max_cases]
 	crange = ["white","red"];
 	cscale = d3.scaleLinear().domain(datarange).range(crange);
 	//geoMercator or geoAlbersUsa
-	var projection = d3.geoAlbersUsa()
-		.translate([width / 2 , height / 2])
-		.scale(900)
+	var projection = d3.geoAlbersUsa().translate([width / 2 , height / 2]).scale(900)
 
-	var path = d3.geoPath()
-		.projection(projection)
+	var path = d3.geoPath().projection(projection)
 		
 
 	var states = topojson.feature(map_data, map_data.objects.states).features;
 	
 	for (var i=0; i < d3.keys(used_data).length; i++){
+		used_data[i].highest_rank = -1;
+		for (var k=0; k < highest_count.length; k++){
+					if (highest_count[k].state == used_data[i].state){ 
+						used_data[i].highest_rank = k;
+					}
+				}
 		for (var j=0; j < d3.keys(states).length; j++){
 			if (states[j].id == used_data[i].fips) {
 				states[j].state = used_data[i].state;
@@ -237,10 +282,12 @@ async function constructSlide1(){
 				states[j].cases = used_data[i].cases;
 				states[j].deaths = used_data[i].deaths;
 				states[j].clr = cscale(used_data[i].cases);
+				states[j].highest_rank = used_data[i].highest_rank;
 				
 			}
 		}	
 	}
+	
 	
 	svg.selectAll(".state")
 		.data(states)
@@ -250,10 +297,77 @@ async function constructSlide1(){
 		.attr("d", path)
 		.attr("fill", function(d) {return d.clr})
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6'); document.getElementById("tooltip").innerHTML = "<p>State:" + d.state + "</p><p>Date:" +  d.date + "</p><p>Cases:" +  (d.cases) + "</p><p>Deaths:" + d.deaths +"</p>";})
-		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr}); document.getElementById("tooltip").innerHTML = "<p>State: All States</p><p>Date: N/A</p><p>Cases: N/A</p><p>Deaths: N/A</p>";});
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr}); document.getElementById("tooltip").innerHTML = "<p>State: All States</p><p>Date: N/A</p><p>Cases: N/A</p><p>Deaths: N/A</p>"; d3.selectAll(".tooltip").remove();})
+		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 100).text(d.state).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 85).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 70).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+			})
+		;
+	
+	highest_count[0].type = "First Highest State"
+	highest_count[1].type = "Second Highest State"
+	highest_count[2].type = "Third Highest State"
+	highest_count[3].type = "Fourth Highest State"
+	highest_count[0].fillclr = cscale(highest_count[0].cases)
+	highest_count[1].fillclr = cscale(highest_count[1].cases)
+	highest_count[2].fillclr = cscale(highest_count[2].cases)
+	highest_count[3].fillclr = cscale(highest_count[3].cases)
+	
 
+	for (var j=0; j < highest_count.length; j++){
+		ele = document.getElementById(highest_count[j].divid)
+		point = ele.getAttribute("d")
+		x = parseInt(point.substring(1,point.indexOf(",")))
+		y = parseInt(point.substring(point.indexOf(",") + 1,point.indexOf("L")))
+		highest_count[j].xpos = x
+		highest_count[j].ypos = y
+	}
+	
+	console.log(highest_count)
+	
+	var tooltip_width = 150
+	var tooltip_height = 100
+	
+	tooltip = [{"x":10						, "y":20			, "linex":tooltip_width + 10		  ,"liney":	0	 		}
+			, {"x":width - tooltip_width	, "y":20			, "linex":width - tooltip_width 	  ,"liney":width - 15	}
+			,{"x":width - tooltip_width		, "y":height - 100	, "linex":width - tooltip_width 	  ,"liney":width - 15	}
+			,{"x":10						, "y":height - 100	, "linex":tooltip_width + 10		  ,"liney":160			}];
+	svg.selectAll()
+		.data(tooltip)
+		.enter()
+		.append("rect")
+		.attr("x", function(d){return d.x})
+		.attr("y", function(d){return d.y})
+		.attr("width", tooltip_width)
+		.attr("height", tooltip_height)
+		.attr("fill", function(d, i){return "#FF9900"})
+		.attr("stroke", "#000000")
+	
+	svg.selectAll()
+		.data(tooltip)
+		.enter()
+		.append("line")
+		.attr("x1", function(d, i){return d.linex})
+		.attr("y1", function(d, i){return d.y})
+		.attr("x2", function(d, i){return highest_count[i].xpos})
+		.attr("y2", function(d, i){return highest_count[i].ypos})
+		.attr("stroke","blue")
+	
+	add_text = svg.selectAll()
+		.data(tooltip)
+		.enter()
+			
+	
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 15}).text(function(d,i){return highest_count[i].type})
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 30}).text(function(d,i){return highest_count[i].state}).attr("class","tooltip-state")
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 45}).text(function(d,i){return "Cases : " + highest_count[i].cases})
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 60}).text(function(d,i){return "Deaths : " + highest_count[i].deaths})
 	
 }
+
+
+//--------------------------------------- constructSlide2 -------------------------------------------------------------------------------------
 
 async function constructSlide2(){
 	d3.selectAll("svg > *").remove();
@@ -387,6 +501,8 @@ async function constructSlide2(){
 	
 }
 
+//--------------------------------------- constructSlide3 -------------------------------------------------------------------------------------
+
 async function constructSlide3(){
 	d3.selectAll("svg > *").remove();
 	selected_slide= "3"	
@@ -445,7 +561,7 @@ async function constructSlide3(){
 	d3.select("svg").append("g").attr("transform","translate("+margin+","+(height+margin)+")").call(d3.axisBottom(x));
 		
 	svg = d3.select("svg")
-		.attr("width", width + (2*margin))
+		.attr("width", width + (4*margin))
 		.attr("height",height+(2*margin))
 		.append("g")
 		.attr("transform","translate("+margin+","+margin+")")
@@ -461,10 +577,18 @@ async function constructSlide3(){
 		.attr("height", function(d) {return height - y(d.data_to_plot)})
 		.attr("fill","#FF0000")
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#0000FF');})
-		.on('mouseout', function(d, i) {d3.select(this).attr('fill', '#FF0000')});
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', '#FF0000'); d3.selectAll(".tooltip").remove();})
+		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 220).text(d.date).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 205).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 190).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 175).text("New Cases:" + Intl.NumberFormat('en-IN').format(d.new_cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 160).text("New Deaths:" + Intl.NumberFormat('en-IN').format(d.new_deaths)).attr("class","tooltip");
+			})
 		;
 }
 
+//--------------------------------------- dateSelected -------------------------------------------------------------------------------------
 
 function dateSelected() {
 	var e = document.getElementById("myRange");
@@ -592,6 +716,8 @@ div.tooltip {
     border-radius: 8px;			
     pointer-events: none;			
 }
+
+.tooltip-state { font: bold; }
 
 </style>
 </html>
