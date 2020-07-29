@@ -22,9 +22,22 @@
 			<table>
 				<tr>
 						<th style="text-align:left;vertical-align:top;padding:0">
-						<div id="button_desc">No Button</div>
-						<div id="tooltip">
-							<p>State: All States</p><p>Cases: N/A</p><p>Deaths: N/A</p>
+						<div id="narration-slide1">
+							<p>	<h1>COVID-19 Impact in USA</h1></p>
+							<p>
+							USA is one of the most impacted country of the world for COVID19. When we look into data as-of 22nd July 2020, there are ... total cases in USA. Out of all the states in USA: California, New-York, Florida and Texas are the most impacted state with all of them having more than 350,000+ cases. These four states that are part of the most impacted one currently were not like that until last month. 
+							
+							</p>
+						</div>
+						<div id="narration-slide2">
+							<p>
+							Narration Slide:2
+							</p>
+						</div>
+						<div id="narration-slide3">
+							<p>
+							Narration Slide:3
+							</p>
 						</div>
 				</th>
 			</table>
@@ -126,11 +139,6 @@ async function init() {
 	last_date=""
 	for (var i=0; i < d3.keys(covid_data_us).length - 1; i++){
 		last_date=covid_data_us[i].date;
-		//var x = document.getElementById("dateselector");
-		//var option = document.createElement("option");
-		//option.text = last_date;
-		//x.add(option)
-		//x.selectedIndex = i
 		date_selected=last_date
 		date_range.push(last_date)
 	}
@@ -180,26 +188,29 @@ async function constructSlide1(){
 	x.style.display = "none";
 	var x = document.getElementById("date-range-filter");
 	x.style.display = "block";
+	var x = document.getElementById("narration-slide1");
+	x.style.display = "block";
+	var x = document.getElementById("narration-slide2");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide3");
+	x.style.display = "none";
 	
 	map_data=[]
-	if (covid_us_map.length < 1) {map_data = await d3.json("https://mkhanal2.github.io/datavisualization.github.io/us-mapdata.json"); console.log("Fresh Load");}
-	else {map_data = covid_us_map; console.log("Got from pre-loaded")};
+	if (covid_us_map.length < 1) {map_data = await d3.json("https://mkhanal2.github.io/datavisualization.github.io/us-mapdata.json");}
+	else {map_data = covid_us_map;};
 	
 	covid_data=[]
-	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv"); console.log("Fresh Load");}
-	else {covid_data = covid_us_states; console.log("Got from pre-loaded")};
+	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv");}
+	else {covid_data = covid_us_states;};
 	
-	document.getElementById("button_desc").innerHTML = "US Overall Trend COVID-19";
-	document.getElementById("button1").className = "w3-button w3-black";
-	document.getElementById("button2").className = "w3-button w3-red";
-	document.getElementById("button3").className = "w3-button w3-black";
+	//document.getElementById("button_desc").innerHTML = "US Overall Trend COVID-19";
 
-	var margin = {top: 0, left: 0, right: 0, bottom: 0},
+	var margin = {top: -150, left: 0, right: 0, bottom: 0},
 		height = 400 - margin.top - margin.bottom,
 		width = 1000 - margin.left - margin.right;
 		
 	var svg = d3.select("svg")
-		.attr("height", height + margin.top + margin.bottom)
+		.attr("height", height + margin.top + margin.bottom + 150)
 		.attr("width", width + margin.left + margin.right)
 		.append("g")
 		.attr("transfrom", "translate(" + margin.left + "," + margin.top + ")");	
@@ -256,7 +267,6 @@ async function constructSlide1(){
 		if(max_deaths < used_data[i].deaths) { max_deaths = used_data[i].cases }
 	}
 	max_cases = highest_count[0].cases
-	console.log(highest_count)
 	datarange = [0, max_cases]
 	crange = ["white","red"];
 	cscale = d3.scaleLinear().domain(datarange).range(crange);
@@ -296,9 +306,10 @@ async function constructSlide1(){
 		.attr("id", function(d) {return "state" + d.id})
 		.attr("d", path)
 		.attr("fill", function(d) {return d.clr})
-		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6'); document.getElementById("tooltip").innerHTML = "<p>State:" + d.state + "</p><p>Date:" +  d.date + "</p><p>Cases:" +  (d.cases) + "</p><p>Deaths:" + d.deaths +"</p>";})
-		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr}); document.getElementById("tooltip").innerHTML = "<p>State: All States</p><p>Date: N/A</p><p>Cases: N/A</p><p>Deaths: N/A</p>"; d3.selectAll(".tooltip").remove();})
+		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6');})
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr});d3.selectAll(".tooltip").remove();})
 		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
+				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410).attr("y", event.pageY-115).attr("width", 100).attr("height", 55).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 100).text(d.state).attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 85).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 70).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
@@ -322,30 +333,31 @@ async function constructSlide1(){
 		y = parseInt(point.substring(point.indexOf(",") + 1,point.indexOf("L")))
 		highest_count[j].xpos = x
 		highest_count[j].ypos = y
-	}
+	}	
 	
-	console.log(highest_count)
 	
-	var tooltip_width = 150
-	var tooltip_height = 100
-	
-	tooltip = [{"x":10						, "y":20			, "linex":tooltip_width + 10		  ,"liney":	0	 		}
-			, {"x":width - tooltip_width	, "y":20			, "linex":width - tooltip_width 	  ,"liney":width - 15	}
-			,{"x":width - tooltip_width		, "y":height - 100	, "linex":width - tooltip_width 	  ,"liney":width - 15	}
-			,{"x":10						, "y":height - 100	, "linex":tooltip_width + 10		  ,"liney":160			}];
+	//Narration Build
+	var narration_width = 150
+	var narration_height = 70
+	narration = [{"x":10					, "y":20			, "linex":narration_width + 10		  ,"liney":	0	 		}
+			, {"x":width - narration_width	, "y":20			, "linex":width - narration_width 	  ,"liney":width - 15	}
+			,{"x":width - narration_width	, "y":height - 100	, "linex":width - narration_width 	  ,"liney":width - 15	}
+			,{"x":10						, "y":height - 100	, "linex":narration_width + 10		  ,"liney":160			}];
+	//SVG Rect part of Narration (four rect)
 	svg.selectAll()
-		.data(tooltip)
+		.data(narration)
 		.enter()
 		.append("rect")
 		.attr("x", function(d){return d.x})
 		.attr("y", function(d){return d.y})
-		.attr("width", tooltip_width)
-		.attr("height", tooltip_height)
+		.attr("width", narration_width)
+		.attr("height", narration_height)
 		.attr("fill", function(d, i){return "#FF9900"})
 		.attr("stroke", "#000000")
 	
+	//SVG Line connecting from map to narration rect.
 	svg.selectAll()
-		.data(tooltip)
+		.data(narration)
 		.enter()
 		.append("line")
 		.attr("x1", function(d, i){return d.linex})
@@ -354,15 +366,16 @@ async function constructSlide1(){
 		.attr("y2", function(d, i){return highest_count[i].ypos})
 		.attr("stroke","blue")
 	
-	add_text = svg.selectAll()
-		.data(tooltip)
-		.enter()
-			
-	
+	//SVG Narration Component Text
+	add_text = svg.selectAll().data(narration).enter();	
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 15}).text(function(d,i){return highest_count[i].type})
-	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 30}).text(function(d,i){return highest_count[i].state}).attr("class","tooltip-state")
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 30}).text(function(d,i){return highest_count[i].state}).attr("class","tooltip-state").attr("font-weight","bold");
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 45}).text(function(d,i){return "Cases : " + highest_count[i].cases})
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 60}).text(function(d,i){return "Deaths : " + highest_count[i].deaths})
+	
+	//As Of Date Component
+	svg.selectAll().data([1]).enter().append("rect").attr("x", 400).attr("y", 20).attr("width", 200).attr("height", 30).attr("fill","#D3D3D3").attr("stroke","black");
+	svg.selectAll().data([1]).enter().append("text").attr("x", 420).attr("y", 40).text("As Of Date:" + date_selected).attr("font-weight","bold").attr("fill","red");
 	
 }
 
@@ -384,31 +397,23 @@ async function constructSlide2(){
 	x.style.display = "none";
 	var x = document.getElementById("date-range-filter");
 	x.style.display = "none";
+	var x = document.getElementById("narration-slide1");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide2");
+	x.style.display = "block";
+	var x = document.getElementById("narration-slide3");
+	x.style.display = "none";
 	
 	covid_data=[]
-	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv"); console.log("Fresh Load");}
-	else {covid_data = covid_us_states; console.log("Got from pre-loaded")};
+	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv"); }
+	else {covid_data = covid_us_states;};
 	
-	document.getElementById("button_desc").innerHTML = "US State Wise Trend COVID-19";
-	document.getElementById("button1").className = "w3-button w3-black";
-	document.getElementById("button2").className = "w3-button w3-red";
-	document.getElementById("button3").className = "w3-button w3-black";
-	
-
-	var margin = 50,
-		legend_margin = 20,
-		height = 300,
-		width = 600;
-		
-
 	var used_data = covid_data.filter(function filterCriteria(d) {return d.state === state_selected});
 	var used_data2 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected2});
 	var used_data3 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected3});
 	var used_data4 = covid_data.filter(function filterCriteria(d) {return d.state === state_selected4});
-	
 	var max_cases = 0;
 	var max_deaths = 0;
-	
 	for (var i=0; i < d3.keys(used_data).length; i++){
 		used_data[i].fips = +used_data[i].fips;
 		used_data[i].cases = +used_data[i].cases;
@@ -416,30 +421,30 @@ async function constructSlide2(){
 		if(max_cases < used_data[i].cases) { max_cases = used_data[i].cases };
 		if(max_deaths < used_data[i].deaths) { max_deaths = used_data[i].cases }
 	}
+		
+	var margin = {top: 50, left: 50, right: 50, bottom: 50};
+	height = 600 - margin.top - margin.bottom;
+	width = 800 - margin.left - margin.right;
 	
-	
+	svg = d3.select("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height",height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform","translate("+margin.left+","+margin.top+")")
+		
 	var x = d3.scaleBand().domain(date_range).range([0,width]);
 	var y = d3.scaleLinear().domain([0, max_cases]).range([height, 0]);
-	
 	x_ticks = [];
-	for (var i=0; i < date_range.length; i = i + parseInt(date_range.length / 5)) {x_ticks.push(date_range[i])}
-	var xaxis = d3.scaleBand().domain(x_ticks).range([0,width]);
+	for (var i=0; i < date_range.length; i = i + Math.ceil(date_range.length / 12)) {x_ticks.push(date_range[i])}
 	
-	d3.select("svg").append("g").attr("transform","translate("+margin+","+margin+")").call(d3.axisLeft(y));
-	d3.select("svg").append("g").attr("transform","translate("+margin+","+(height+margin)+")").call(d3.axisBottom(x).tickValues(x_ticks).tickFormat(d3.format("~s")));
+	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+margin.top+")").call(d3.axisLeft(y));
+	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+(height+margin.top)+")").call(d3.axisBottom(x).tickValues(x_ticks));	
 	
 	var line = d3.line()
 				.x(function(d){return x(d.date);})
 				.y(function(d){return y(d.cases);});
 	
-	
-	svg = d3.select("svg")
-		.attr("width", width + (2*margin))
-		.attr("height",height+(2*margin))
-		.append("g")
-		.attr("transform","translate("+margin+","+margin+")")
-	
-	
+			
 	svg.selectAll()
 		.data(used_data)
 		.enter()
@@ -476,7 +481,7 @@ async function constructSlide2(){
 	legend_color = ["blue", "red", "green", "black"];
 	legend_state = [state_selected, state_selected2, state_selected3, state_selected4];
 	
-	svg.selectAll("circle")
+	svg.selectAll()
 		.data(legend_y)
 		.enter()
 		.append("rect")
@@ -487,7 +492,7 @@ async function constructSlide2(){
 		.attr("fill",function(d, i) {return legend_color[i]})
 		;
 			
-	svg.selectAll("text")
+	svg.selectAll()
 		.data(legend_y)
 		.enter()	
 		.append("text")
@@ -498,6 +503,7 @@ async function constructSlide2(){
 		.attr("font-size", "15px")
 		.attr("fill", function(d, i) {return legend_color[i]})
 		;
+	
 	
 }
 
@@ -518,22 +524,16 @@ async function constructSlide3(){
 	x.style.display = "block";
 	var x = document.getElementById("date-range-filter");
 	x.style.display = "none";
+	var x = document.getElementById("narration-slide1");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide2");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide3");
+	x.style.display = "block";
 	
 	covid_data=[]
-	if (covid_us_states_weekly.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states-weeklydata.csv"); console.log("Fresh Load");}
-	else {covid_data = covid_us_states_weekly; console.log("Got from pre-loaded")};
-	
-	document.getElementById("button_desc").innerHTML = "US States Wise Weekly Trend COVID-19";
-	document.getElementById("button1").className = "w3-button w3-black";
-	document.getElementById("button2").className = "w3-button w3-red";
-	document.getElementById("button3").className = "w3-button w3-black";
-	
-
-	var margin = 50,
-		legend_margin = 20,
-		height = 300,
-		width = 600;
-		
+	if (covid_us_states_weekly.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states-weeklydata.csv");}
+	else {covid_data = covid_us_states_weekly;};	
 
 	var used_data = covid_data.filter(function filterCriteria(d) {return d.state === slide3_state_selected});
 	
@@ -553,18 +553,24 @@ async function constructSlide3(){
 	}
 	
 	
+	var margin = {top: 50, left: 50, right: 150, bottom: 100};
+	height = 600 - margin.top - margin.bottom;
+	width = 900 - margin.left - margin.right;
+	
+	svg = d3.select("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height",height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform","translate("+margin.left+","+margin.top+")")
+	
 	var x = d3.scaleBand().domain(local_date_range).range([0,width]);
 	var y = d3.scaleLinear().domain([0, max_value]).range([height, 0]);
 
+	x_ticks = [];
+	for (var i=0; i < used_data.length; i = i + Math.ceil(used_data.length / 10)) {x_ticks.push(used_data[i].date)}
 	
-	d3.select("svg").append("g").attr("transform","translate("+margin+","+margin+")").call(d3.axisLeft(y));
-	d3.select("svg").append("g").attr("transform","translate("+margin+","+(height+margin)+")").call(d3.axisBottom(x));
-		
-	svg = d3.select("svg")
-		.attr("width", width + (4*margin))
-		.attr("height",height+(2*margin))
-		.append("g")
-		.attr("transform","translate("+margin+","+margin+")")
+	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+margin.top+")").call(d3.axisLeft(y));
+	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+(height+margin.top)+")").call(d3.axisBottom(x).tickValues(x_ticks));
 	
 	
 	svg.selectAll()
@@ -579,11 +585,12 @@ async function constructSlide3(){
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#0000FF');})
 		.on('mouseout', function(d, i) {d3.select(this).attr('fill', '#FF0000'); d3.selectAll(".tooltip").remove();})
 		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 220).text(d.date).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 205).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 190).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 175).text("New Cases:" + Intl.NumberFormat('en-IN').format(d.new_cases)).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 460).attr("y", event.pageY - 160).text("New Deaths:" + Intl.NumberFormat('en-IN').format(d.new_deaths)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410 - margin.left).attr("y", event.pageY - 170 - margin.top).attr("width", 140).attr("height", 90).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 150 - margin.top).text(d.date).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 135 - margin.top).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 120 - margin.top).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 105 - margin.top).text("New Cases:" + Intl.NumberFormat('en-IN').format(d.new_cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 90 - margin.top).text("New Deaths:" + Intl.NumberFormat('en-IN').format(d.new_deaths)).attr("class","tooltip");
 			})
 		;
 }
@@ -654,13 +661,13 @@ div#narrative-area {
 	background-color: #8F8;
 	width: 400px;
 	position: absolute;
-	min-height: 500px;
+	min-height: 650px;
 }
 
 div#chararea {
 	border: solid 2px black;
 	margin-left: 410px;
-	min-height: 500px;
+	min-height: 650px;
 }
 
 div#footer {
