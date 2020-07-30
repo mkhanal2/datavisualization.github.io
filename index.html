@@ -25,18 +25,29 @@
 						<div id="narration-slide1">
 							<p>	<h1>COVID-19 Impact in USA</h1></p>
 							<p>
-							USA is one of the most impacted country of the world for COVID19. When we look into data as-of 22nd July 2020, there are ... total cases in USA. Out of all the states in USA: California, New-York, Florida and Texas are the most impacted state with all of them having more than 350,000+ cases. These four states that are part of the most impacted one currently were not like that until last month. 
-							
+							USA is one of the most impacted country of the world for COVID19. As-of 22nd July 2020, there are around 3.98 million total cases in USA. Not all states are impacted equally by this pandemic. The top 3-4 states contribute about 35-40% of the overall cases. As of 22nd July 2020, California, New York, Florida and Texas are the most impacted states and each contributing around 9-10% each to the total cases. In combination around 40% of the cases are from these four states.     
+							</p>
+							<p>
+							The distribution around the states has varied as the time passes. Around late March, New York was alone about 40% of the overall cases. Chart on the right gives the perspective of top four states at a given time. Use the slider at the bottom to see how states cases number are changing by time.   
+							</p>
+							<p>
+							Proceed to next slide to see the trend on current top four states: California, New York, Florida and Texas and see how they reach to the current state.
 							</p>
 						</div>
 						<div id="narration-slide2">
 							<p>
-							Narration Slide:2
+							<p>	<h1>Trending for Top four States</h1></p>
+							<p>Chart on the right shows the trend comparison for the top four states. New York had the major impacts on the earlier days after which county went to lock-down. After lock-down the cure for New-York is not that exponentiation, whereas for other three states California, Florida and Texas initially they stated slow compared to New-York, but post lock-down the cases count has grown exponentially for those states.</p>
+							<p>As of July 15th, California became the sates with highest COVID counts surpassing New-York.</p>
+							<p>Proceed to next slide to see trends for all the states on different metrics.</p>
 							</p>
 						</div>
 						<div id="narration-slide3">
 							<p>
-							Narration Slide:3
+							<p>	<h1>Free form Analysis</h1></p>
+							<p> Use the selector on the top of the charts to analyze different metrics and states so see how each states are trending on different metrics like Total Cases, Total Death, New Cases and New dates. 
+							</p>
+							<p> Data on these charts are on weekly basis.  
 							</p>
 						</div>
 				</th>
@@ -135,6 +146,12 @@ slide3_state_selected = "California"
 use_metric = "New Cases"
 
 async function init() {
+	var x = document.getElementById("narration-slide1");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide2");
+	x.style.display = "none";
+	var x = document.getElementById("narration-slide3");
+	x.style.display = "none";
 	const covid_data_us = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-total.csv");
 	last_date=""
 	for (var i=0; i < d3.keys(covid_data_us).length - 1; i++){
@@ -203,6 +220,10 @@ async function constructSlide1(){
 	if (covid_us_states.length < 1) {covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-states.csv");}
 	else {covid_data = covid_us_states;};
 	
+	us_overall_covid_data=[]
+	if (covid_us_overall.length < 1){us_overall_covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-total.csv");}
+	else(us_overall_covid_data = covid_us_overall)
+	
 	//document.getElementById("button_desc").innerHTML = "US Overall Trend COVID-19";
 
 	var margin = {top: -150, left: 0, right: 0, bottom: 0},
@@ -216,6 +237,8 @@ async function constructSlide1(){
 		.attr("transfrom", "translate(" + margin.left + "," + margin.top + ")");	
 
 	var used_data = covid_data.filter(function filterCriteria(d) {return d.date === date_selected});
+	var overall_data = us_overall_covid_data.filter(function filterCriteria(d) {return d.date === date_selected});
+	console.log(overall_data)
 	
 	var max_cases = 0;
 	var max_deaths = 0;
@@ -226,6 +249,9 @@ async function constructSlide1(){
 		used_data[i].fips = +used_data[i].fips;
 		used_data[i].cases = +used_data[i].cases;
 		used_data[i].deaths = +used_data[i].deaths;
+		used_data[i].perc_to_tot = ((parseInt(used_data[i].cases) * 100) / parseInt(overall_data[0].cases)).toFixed(2);
+		console.log((parseInt(used_data[i].cases) * 100) / parseInt(overall_data[0].cases))
+		console.log(used_data[i].perc_to_tot)
 		if(highest_count[3].cases < used_data[i].cases) { 
 			depth = 1
 			if (highest_count[2].cases < used_data[i].cases){depth = 2}
@@ -239,7 +265,8 @@ async function constructSlide1(){
 				highest_count[0].cases = used_data[i].cases
 				highest_count[0].state = used_data[i].state
 				highest_count[0].deaths = used_data[i].deaths
-				highest_count[0].divid = "state" + used_data[i].fips				
+				highest_count[0].divid = "state" + used_data[i].fips
+				highest_count[0].perc_to_tot = used_data[i].perc_to_tot
 				}
 			else if (depth == 3){
 				Object.assign(highest_count[3], highest_count[2]);
@@ -248,6 +275,7 @@ async function constructSlide1(){
 				highest_count[1].state = used_data[i].state
 				highest_count[1].deaths = used_data[i].deaths
 				highest_count[1].divid = "state" + used_data[i].fips
+				highest_count[1].perc_to_tot = used_data[i].perc_to_tot
 				}
 			else if (depth == 2){
 				Object.assign(highest_count[3], highest_count[2]);
@@ -255,12 +283,14 @@ async function constructSlide1(){
 				highest_count[2].state = used_data[i].state
 				highest_count[2].deaths = used_data[i].deaths
 				highest_count[2].divid = "state" + used_data[i].fips
+				highest_count[2].perc_to_tot = used_data[i].perc_to_tot
 				}
 			else if (depth == 1){
 				highest_count[3].cases = used_data[i].cases
 				highest_count[3].state = used_data[i].state
 				highest_count[3].deaths = used_data[i].deaths
 				highest_count[3].divid = "state" + used_data[i].fips
+				highest_count[3].perc_to_tot = used_data[i].perc_to_tot
 				}
 			
 			};
@@ -293,6 +323,7 @@ async function constructSlide1(){
 				states[j].deaths = used_data[i].deaths;
 				states[j].clr = cscale(used_data[i].cases);
 				states[j].highest_rank = used_data[i].highest_rank;
+				states[j].perc_to_tot = used_data[i].perc_to_tot;
 				
 			}
 		}	
@@ -309,10 +340,12 @@ async function constructSlide1(){
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6');})
 		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr});d3.selectAll(".tooltip").remove();})
 		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
-				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410).attr("y", event.pageY-115).attr("width", 100).attr("height", 55).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410).attr("y", event.pageY-115).attr("width", 120).attr("height", 70).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 100).text(d.state).attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 85).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 70).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 70).text("% to Total:" + d.perc_to_tot + "%").attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 55).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+				
 			})
 		;
 	
@@ -338,7 +371,7 @@ async function constructSlide1(){
 	
 	//Narration Build
 	var narration_width = 150
-	var narration_height = 70
+	var narration_height = 90
 	narration = [{"x":10					, "y":20			, "linex":narration_width + 10		  ,"liney":	0	 		}
 			, {"x":width - narration_width	, "y":20			, "linex":width - narration_width 	  ,"liney":width - 15	}
 			,{"x":width - narration_width	, "y":height - 100	, "linex":width - narration_width 	  ,"liney":width - 15	}
@@ -370,12 +403,14 @@ async function constructSlide1(){
 	add_text = svg.selectAll().data(narration).enter();	
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 15}).text(function(d,i){return highest_count[i].type})
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 30}).text(function(d,i){return highest_count[i].state}).attr("class","tooltip-state").attr("font-weight","bold");
-	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 45}).text(function(d,i){return "Cases : " + highest_count[i].cases})
-	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 60}).text(function(d,i){return "Deaths : " + highest_count[i].deaths})
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 45}).text(function(d,i){return "Cases : " + Intl.NumberFormat('en-IN').format(highest_count[i].cases)})
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 60}).text(function(d,i){return "% to Total : " + highest_count[i].perc_to_tot + "%"})
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 75}).text(function(d,i){return "Deaths : " + Intl.NumberFormat('en-IN').format(highest_count[i].deaths)})
 	
 	//As Of Date Component
-	svg.selectAll().data([1]).enter().append("rect").attr("x", 400).attr("y", 20).attr("width", 200).attr("height", 30).attr("fill","#D3D3D3").attr("stroke","black");
+	svg.selectAll().data([1]).enter().append("rect").attr("x", 400).attr("y", 20).attr("width", 200).attr("height", 60).attr("fill","#D3D3D3").attr("stroke","black");
 	svg.selectAll().data([1]).enter().append("text").attr("x", 420).attr("y", 40).text("As Of Date:" + date_selected).attr("font-weight","bold").attr("fill","red");
+	svg.selectAll().data([1]).enter().append("text").attr("x", 420).attr("y", 60).text("Total Cases:" + Intl.NumberFormat('en-IN').format(overall_data[0].cases)).attr("font-weight","bold").attr("fill","red");
 	
 }
 
