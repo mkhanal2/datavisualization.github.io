@@ -12,11 +12,11 @@
 			<h1>Narrative Data Visualization : COVID-19</h1>
 		</div>
 		<div id = "slider" >
-			<button id="prev-button" class="w3-button w3-black" onclick="ButtonPressed(-1)">Previous</button>
-			<button id="button1" class="w3-button w3-black" onclick="constructSlide1()">Slide1 - COVID19 Overall</button>
-			<button id="button2" class="w3-button w3-black" onclick="constructSlide2()">Slide2 - Top States Comparision</button>
-			<button id="button3" class="w3-button w3-black" onclick="constructSlide3()">Slide3 - Free Form Analysis</button>
-			<button id="next-button" class="w3-button w3-black" onclick="ButtonPressed(1)">Next</button>
+			<button id="prev-button" onclick="ButtonPressed(-1)">Previous</button>
+			<button id="button1" onclick="constructSlide1()">Slide1 - COVID19 Overall</button>
+			<button id="button2" onclick="constructSlide2()">Slide2 - Top States Comparision</button>
+			<button id="button3" onclick="constructSlide3()">Slide3 - Free Form Analysis</button>
+			<button id="next-button" onclick="ButtonPressed(1)">Next</button>
 		</div>
 		<div id = "narrative-area" >
 			<table>
@@ -33,22 +33,26 @@
 							<p>
 							Proceed to next slide to see the trend on current top four states: California, New York, Florida and Texas and see how they reach to the current state.
 							</p>
+							<button id="next-button" onclick="ButtonPressed(1)">Next Slide</button>
 						</div>
 						<div id="narration-slide2">
-							<p>
 							<p>	<h1>Trending for Top four States</h1></p>
-							<p>Chart on the right shows the trend comparison for the top four states. New York had the major impacts on the earlier days after which county went to lock-down. After lock-down the cure for New-York is not that exponentiation, whereas for other three states California, Florida and Texas initially they stated slow compared to New-York, but post lock-down the cases count has grown exponentially for those states.</p>
+							<p>Chart on the right shows the trend comparison for the top four states. New York had the major impacts on the earlier days after which states went to lock-down. After lock-down the cure for New-York is not that exponential, it has almost flat-out. Whereas for other three states California, Florida and Texas initially they stated slow compared to New-York, but post lock-down the cases count has grown exponentially for those states.</p>
 							<p>As of July 15th, California became the sates with highest COVID counts surpassing New-York.</p>
 							<p>Proceed to next slide to see trends for all the states on different metrics.</p>
-							</p>
+							<button id="prev-button" onclick="ButtonPressed(-1)">Previous Slide</button>
+							<button id="next-button" onclick="ButtonPressed(1)">Next Slide</button>
 						</div>
 						<div id="narration-slide3">
 							<p>
 							<p>	<h1>Free form Analysis</h1></p>
-							<p> Use the selector on the top of the charts to analyze different metrics and states so see how each states are trending on different metrics like Total Cases, Total Death, New Cases and New dates. 
-							</p>
 							<p> Data on these charts are on weekly basis.  
 							</p>
+							<p> Use the selector on the top of the charts to analyze different metrics and states so see how each states are trending on different metrics like Total Cases, Total Death, New Cases and New dates. 
+							</p>
+							<p> If you see 'New Cases' for Califonia it is trending up week after week in massive amount.Whereas if you see 'New Cases' for New-York, the cases count are coming down week after week. 							
+							</p>
+							<button id="prev-button" onclick="ButtonPressed(-1)">Previous Slide</button>
 						</div>
 				</th>
 			</table>
@@ -223,18 +227,17 @@ async function constructSlide1(){
 	us_overall_covid_data=[]
 	if (covid_us_overall.length < 1){us_overall_covid_data = await d3.csv("https://mkhanal2.github.io/datavisualization.github.io/covid19-data-us-total.csv");}
 	else(us_overall_covid_data = covid_us_overall)
-	
-	//document.getElementById("button_desc").innerHTML = "US Overall Trend COVID-19";
 
-	var margin = {top: -150, left: 0, right: 0, bottom: 0},
-		height = 400 - margin.top - margin.bottom,
-		width = 1000 - margin.left - margin.right;
-		
-	var svg = d3.select("svg")
-		.attr("height", height + margin.top + margin.bottom + 150)
+	var margin = {top: 0, left: 50, right: 50, bottom: 0},
+		height = 550 - margin.top - margin.bottom,
+		width = 900 - margin.left - margin.right;
+
+
+	svg = d3.select("svg")
 		.attr("width", width + margin.left + margin.right)
+		.attr("height",height + margin.top + margin.bottom)
 		.append("g")
-		.attr("transfrom", "translate(" + margin.left + "," + margin.top + ")");	
+		.attr("transform","translate("+margin.left+","+margin.top+")")
 
 	var used_data = covid_data.filter(function filterCriteria(d) {return d.date === date_selected});
 	var overall_data = us_overall_covid_data.filter(function filterCriteria(d) {return d.date === date_selected});
@@ -301,7 +304,7 @@ async function constructSlide1(){
 	crange = ["white","red"];
 	cscale = d3.scaleLinear().domain(datarange).range(crange);
 	//geoMercator or geoAlbersUsa
-	var projection = d3.geoAlbersUsa().translate([width / 2 , height / 2]).scale(900)
+	var projection = d3.geoAlbersUsa().translate([width / 2 , height / 2]).scale(850)
 
 	var path = d3.geoPath().projection(projection)
 		
@@ -372,10 +375,10 @@ async function constructSlide1(){
 	//Narration Build
 	var narration_width = 150
 	var narration_height = 90
-	narration = [{"x":10					, "y":20			, "linex":narration_width + 10		  ,"liney":	0	 		}
-			, {"x":width - narration_width	, "y":20			, "linex":width - narration_width 	  ,"liney":width - 15	}
-			,{"x":width - narration_width	, "y":height - 100	, "linex":width - narration_width 	  ,"liney":width - 15	}
-			,{"x":10						, "y":height - 100	, "linex":narration_width + 10		  ,"liney":160			}];
+	narration = [{"x":10 - margin.left						, "y":20			, "linex":narration_width + 10 - margin.left		,"liney":	0	 		}
+			, {"x":width - narration_width + margin.right	, "y":20			, "linex":width - narration_width + margin.right 	,"liney":width - 15	}
+			,{"x":width - narration_width + margin.right	, "y":height - 100	, "linex":width - narration_width + margin.right  	,"liney":width - 15	}
+			,{"x":10 - margin.left							, "y":height - 100	, "linex":narration_width + 10 - margin.left 	  	,"liney":160			}];
 	//SVG Rect part of Narration (four rect)
 	svg.selectAll()
 		.data(narration)
@@ -408,9 +411,9 @@ async function constructSlide1(){
 	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 75}).text(function(d,i){return "Deaths : " + Intl.NumberFormat('en-IN').format(highest_count[i].deaths)})
 	
 	//As Of Date Component
-	svg.selectAll().data([1]).enter().append("rect").attr("x", 400).attr("y", 20).attr("width", 200).attr("height", 60).attr("fill","#D3D3D3").attr("stroke","black");
-	svg.selectAll().data([1]).enter().append("text").attr("x", 420).attr("y", 40).text("As Of Date:" + date_selected).attr("font-weight","bold").attr("fill","red");
-	svg.selectAll().data([1]).enter().append("text").attr("x", 420).attr("y", 60).text("Total Cases:" + Intl.NumberFormat('en-IN').format(overall_data[0].cases)).attr("font-weight","bold").attr("fill","red");
+	svg.selectAll().data([1]).enter().append("rect").attr("x", (width/2) - 100).attr("y", 10 - margin.top).attr("width", 200).attr("height", 60).attr("fill","#D3D3D3").attr("stroke","black");
+	svg.selectAll().data([1]).enter().append("text").attr("x", (width/2) - 80).attr("y", 30 - margin.top).text("As Of Date:" + date_selected).attr("font-weight","bold").attr("fill","red");
+	svg.selectAll().data([1]).enter().append("text").attr("x", (width/2) - 80).attr("y", 50 - margin.top).text("Total Cases:" + Intl.NumberFormat('en-IN').format(overall_data[0].cases)).attr("font-weight","bold").attr("fill","red");
 	
 }
 
@@ -538,6 +541,44 @@ async function constructSlide2(){
 		.attr("font-size", "15px")
 		.attr("fill", function(d, i) {return legend_color[i]})
 		;
+		
+	//Narration Build
+	var narration_width = 300
+	var narration_height = 25
+	narration = [{"x":250					, "y":0				, "linex":narration_width + 250		  ,"liney":	0	 	  ,"linex2":690    	,"liney2":10
+					, "ntext":"This is when California surpass NewYork"}
+			,{"x":width + margin.right - narration_width	, "y":height - 40	, "linex":width + margin.right - narration_width + 150	  ,"liney":height - 40 ,"linex2":width - 170,"liney2":height - 80
+			, "ntext":"Three states strated raising up exponentially"
+			}
+			,{"x":10						, "y":height - 300	, "linex":narration_width + 10 - 150		  ,"liney":height - 300 + narration_height	  ,"linex2":width - 470		,"liney2":height - 10
+			, "ntext":"New-York started raising up exponentially"
+			}];
+	//SVG Rect part of Narration (four rect)
+	svg.selectAll()
+		.data(narration)
+		.enter()
+		.append("rect")
+		.attr("x", function(d){return d.x})
+		.attr("y", function(d){return d.y})
+		.attr("width", narration_width)
+		.attr("height", narration_height)
+		.attr("fill", function(d, i){return "#FF9900"})
+		.attr("stroke", "#000000")
+	
+	//SVG Line connecting from map to narration rect.
+	svg.selectAll()
+		.data(narration)
+		.enter()
+		.append("line")
+		.attr("x1", function(d, i){return d.linex})
+		.attr("y1", function(d, i){return d.liney})
+		.attr("x2", function(d, i){return d.linex2})
+		.attr("y2", function(d, i){return d.liney2})
+		.attr("stroke","#FF9900")
+	
+	//SVG Narration Component Text
+	add_text = svg.selectAll().data(narration).enter();	
+	add_text.append("text").attr("x", function(d){return d.x + 10}).attr("y", function(d){return d.y + 15}).text(function(d,i){return d.ntext});
 	
 	
 }
@@ -607,6 +648,8 @@ async function constructSlide3(){
 	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+margin.top+")").call(d3.axisLeft(y));
 	d3.select("svg").append("g").attr("transform","translate("+margin.left+","+(height+margin.top)+")").call(d3.axisBottom(x).tickValues(x_ticks));
 	
+	col_sel={"Total Cases":"red","Total Death":"#b11226","New Cases":"red","New Death":"#b11226"}
+	metric_color = col_sel[use_metric];
 	
 	svg.selectAll()
 		.data(used_data)
@@ -616,9 +659,9 @@ async function constructSlide3(){
 		.attr("y", function(d) {return y(d.data_to_plot)})
 		.attr("width", (width / local_date_range.length) - 5)
 		.attr("height", function(d) {return height - y(d.data_to_plot)})
-		.attr("fill","#FF0000")
+		.attr("fill",metric_color)
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#0000FF');})
-		.on('mouseout', function(d, i) {d3.select(this).attr('fill', '#FF0000'); d3.selectAll(".tooltip").remove();})
+		.on('mouseout', function(d, i) {d3.select(this).attr('fill', metric_color); d3.selectAll(".tooltip").remove();})
 		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
 				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410 - margin.left).attr("y", event.pageY - 170 - margin.top).attr("width", 140).attr("height", 90).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 150 - margin.top).text(d.date).attr("class","tooltip");
@@ -627,6 +670,32 @@ async function constructSlide3(){
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 105 - margin.top).text("New Cases:" + Intl.NumberFormat('en-IN').format(d.new_cases)).attr("class","tooltip");
 				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 405 - margin.left).attr("y", event.pageY - 90 - margin.top).text("New Deaths:" + Intl.NumberFormat('en-IN').format(d.new_deaths)).attr("class","tooltip");
 			})
+		;
+	
+	
+	
+	
+	svg.selectAll()
+		.data([1])
+		.enter()
+		.append("rect")
+		.attr("x", 20)
+		.attr("y", 20)
+		.attr("width", 10)
+		.attr("height", 10)
+		.attr("fill", metric_color)
+		;
+			
+	svg.selectAll()
+		.data([1])
+		.enter()	
+		.append("text")
+		.attr("x", 30)
+		.attr("y", 30)
+		.text(use_metric)
+		.attr("font-family", "sans-serif")
+		.attr("font-size", "15px")
+		.attr("fill", metric_color)
 		;
 }
 
