@@ -304,7 +304,7 @@ async function constructSlide1(){
 	crange = ["white","red"];
 	cscale = d3.scaleLinear().domain(datarange).range(crange);
 	//geoMercator or geoAlbersUsa
-	var projection = d3.geoAlbersUsa().translate([width / 2 , height / 2]).scale(850)
+	var projection = d3.geoAlbersUsa().translate([width / 2 , height / 2]).scale(800)
 
 	var path = d3.geoPath().projection(projection)
 		
@@ -343,11 +343,11 @@ async function constructSlide1(){
 		.on('mouseover', function(d, i) {d3.select(this).attr('fill', '#add8e6');})
 		.on('mouseout', function(d, i) {d3.select(this).attr('fill', function(d) {return d.clr});d3.selectAll(".tooltip").remove();})
 		.on('mousemove', function(d, i) {d3.selectAll(".tooltip").remove();
-				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - 410).attr("y", event.pageY-115).attr("width", 120).attr("height", 70).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 100).text(d.state).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 85).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 70).text("% to Total:" + d.perc_to_tot + "%").attr("class","tooltip");
-				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - 410).attr("y", event.pageY - 55).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("rect").attr("x", d3.event.pageX - margin.left - 410).attr("y", event.pageY -margin.top - 100).attr("width", 120).attr("height", 70).attr("fill","#FFDD66").attr("stroke","black").attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - margin.left - 410).attr("y", event.pageY -margin.top - 85).text(d.state).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - margin.left - 410).attr("y", event.pageY -margin.top - 70).text("Case:" + Intl.NumberFormat('en-IN').format(d.cases)).attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - margin.left - 410).attr("y", event.pageY -margin.top - 55).text("% to Total:" + d.perc_to_tot + "%").attr("class","tooltip");
+				svg.selectAll().data([1]).enter().append("text").attr("x", d3.event.pageX - margin.left - 410).attr("y", event.pageY -margin.top - 40).text("Deaths:" + Intl.NumberFormat('en-IN').format(d.deaths)).attr("class","tooltip");
 				
 			})
 		;
@@ -375,10 +375,10 @@ async function constructSlide1(){
 	//Narration Build
 	var narration_width = 150
 	var narration_height = 90
-	narration = [{"x":10 - margin.left						, "y":20			, "linex":narration_width + 10 - margin.left		,"liney":	0	 		}
-			, {"x":width - narration_width + margin.right	, "y":20			, "linex":width - narration_width + margin.right 	,"liney":width - 15	}
-			,{"x":width - narration_width + margin.right	, "y":height - 100	, "linex":width - narration_width + margin.right  	,"liney":width - 15	}
-			,{"x":10 - margin.left							, "y":height - 100	, "linex":narration_width + 10 - margin.left 	  	,"liney":160			}];
+	narration = [{"x":10 - margin.left						, "y":20			, "linex":narration_width + 10 - margin.left		,"liney":	20	 		}
+			, {"x":width - (narration_width*2) + margin.right	, "y":20			, "linex":width - (narration_width * 1.5) + margin.right 	,"liney":20 + narration_height	}
+			,{"x":width - (narration_width*2) + margin.right	, "y":height - 90	, "linex":width - (narration_width * 1.5) + margin.right  	,"liney":height - 90	}
+			,{"x":10 - margin.left							, "y":height - 90	, "linex":narration_width + 10 - margin.left 	  	,"liney":height - 90			}];
 	//SVG Rect part of Narration (four rect)
 	svg.selectAll()
 		.data(narration)
@@ -397,7 +397,7 @@ async function constructSlide1(){
 		.enter()
 		.append("line")
 		.attr("x1", function(d, i){return d.linex})
-		.attr("y1", function(d, i){return d.y})
+		.attr("y1", function(d, i){return d.liney})
 		.attr("x2", function(d, i){return highest_count[i].xpos})
 		.attr("y2", function(d, i){return highest_count[i].ypos})
 		.attr("stroke","blue")
@@ -536,7 +536,7 @@ async function constructSlide2(){
 		.append("text")
 		.attr("x", 30)
 		.attr("y", function(d, i) {return d + 10})
-		.text(function(d, i) {return legend_state[i]})
+		.text(function(d, i) {return legend_state[i] + " - Total Cases" })
 		.attr("font-family", "sans-serif")
 		.attr("font-size", "15px")
 		.attr("fill", function(d, i) {return legend_color[i]})
